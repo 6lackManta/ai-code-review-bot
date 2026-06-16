@@ -49,15 +49,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="feat/daily-$(date +%Y%m%d)"
-          gh pr create \
-            --title "Daily Feature: $(date +%Y-%m-%d)" \
-            --body "## 🎯 Daily Feature Push
+          BODY="## 🎯 Daily Feature Push
 
-**Date:** $(date +%Y-%m-%d)
+Date: $(date +%Y-%m-%d)
 
-### Changes
+Changes:
 - ✨ Auto-generated feature with actual code
 - 📝 Production-ready implementation
-- 🔍 Ready for code review" \
+- 🔍 Ready for code review"
+          
+          gh pr create \
+            --title "Daily Feature: $(date +%Y-%m-%d)" \
+            --body "$BODY" \
             --base main \
             --head $BRANCH_NAME || true
