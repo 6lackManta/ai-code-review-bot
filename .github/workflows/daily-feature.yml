@@ -1,0 +1,61 @@
+name: Daily Feature Push
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  generate-feature:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate Feature
+        id: feature
+        run: |
+          node .github/scripts/generate-feature.js
+          echo "feature_date=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+          echo "feature_time=$(date +%H:%M:%S)" >> $GITHUB_OUTPUT
+
+      - name: Create feature branch and commit
+        run: |
+          BRANCH_NAME="feat/daily-$(date +%Y%m%d)"
+          git checkout -b ${BRANCH_NAME}
+          git add src/analyzers/
+          git commit -m "feat: Add daily feature - $(date +%Y-%m-%d)" || true
+          git push origin ${BRANCH_NAME}
+
+      - name: Create Pull Request
+        uses: actions/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Daily Feature: $(date +%Y-%m-%d)"
+          body: |
+            ## 🎯 Daily Feature Push
+            
+            **Date:** ${{ steps.feature.outputs.feature_date }}
+            
+            ### Changes
+            - ✨ Auto-generated feature with actual code
+            - 📝 Production-ready implementation
+            - 🔍 Ready for code review
+          branch: feat/daily-$(date +%Y%m%d)
+          delete-branch: false
